@@ -1,12 +1,10 @@
 
 import os 
-from serial import Serial 
 import time
 from datetime import datetime 
+from serial import Serial 
 
 nextCompassPoll = 0.0 ;
-
-compassPollMsg = b'CMP:\n' 
 
 serialDevDir='/dev/serial/by-id' 
 
@@ -25,26 +23,25 @@ if ( os.path.isdir(serialDevDir) ):
 
             if ( (len(receivedMsg) >= 4) and (receivedMsg[3] == b':'[0])):
 
-                tag = receivedMsg[0:3] 
-                value = receivedMsg[4:]
+                msgType = receivedMsg[0:3] 
+                msgData = receivedMsg[4:]
 
-                if ( tag == b'TIM' ):
-                    hhmmTime= datetime.now().strftime('%H:%M') 
-                    sendMsg = b'TIM:' + hhmmTime.encode('UTF-8')
+                if ( msgType == b'TIM' ):
+                    timeString = datetime.now().strftime('%H:%M') 
+                    sendMsg = b'TIM:' + timeString.encode('ascii')
                     serial.write(sendMsg + b'\n')
 
-                elif ( tag == b'DAT' ):
-                    hhmmTime= datetime.now().strftime('%d-%b-%Y') 
-                    sendMsg = b'DAT:' + hhmmTime.encode('UTF-8')
+                elif ( msgType == b'DAT' ):
+                    dateString = datetime.now().strftime('%d-%b-%Y') 
+                    sendMsg = b'DAT:' + dateString.encode('ascii')
                     serial.write(sendMsg + b'\n')
 
-                elif ( tag == b'CMP' ):
-                    print('Compass Bearing = ' + value.decode('UTF-8'))
+                elif ( msgType == b'CMP' ):
+                    print('Compass Bearing = ' + msgData.decode('ascii'))
 
             currentTime = time.time() 
-
             if ( currentTime > nextCompassPoll ):
-                serial.write(compassPollMsg)
+                serial.write(b'CMP:\n')
                 nextCompassPoll = currentTime + 2.0
     else:
 
